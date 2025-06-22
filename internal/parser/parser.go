@@ -37,8 +37,23 @@ func parseTransactions(transactions types.EchidnaReproducer) ([]types.ParsedCall
 	var calls []types.ParsedCall
 
 	for _, tx := range transactions {
-		// Skip NoCall transactions (they represent time delays)
+		// Handle NoCall transactions (they represent pure time delays)
 		if tx.Call.Tag == "NoCall" {
+			hasDelay, delayValue := parseDelay(tx.Delay)
+			if hasDelay {
+				delayCall := types.ParsedCall{
+					FunctionName: "", // Empty function name for pure delays
+					Parameters:   []types.ParsedParam{},
+					Dst:          tx.Dst,
+					Src:          tx.Src,
+					Value:        tx.Value,
+					Gas:          tx.Gas,
+					GasPrice:     tx.GasPrice,
+					HasDelay:     true,
+					DelayValue:   delayValue,
+				}
+				calls = append(calls, delayCall)
+			}
 			continue
 		}
 
